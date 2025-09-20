@@ -1,0 +1,29 @@
+/* styles.css */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;  /* Width of the scrollbar for WebKit browsers */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 1px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: lightgray;
+}
+@media (max-width: 450px) {
+  aside {
+    position: fixed !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 330px !important;
+    margin: 0 !important;
+    z-index: 999; /* Optional: ensure it shows on top */
+  }
+}
+ 
+html, body {
+  height: 100%;
+  min-height: -webkit-fill-available;
+}
