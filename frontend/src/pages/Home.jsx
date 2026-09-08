@@ -18,7 +18,7 @@ const Home = () => {
 
     const [searchindmsg, setIndmsg] = useState(1);
     const [search, stateSearch] = useState('')
-    const [searchmsgid,setSearchmsgid] = useState(null)
+    const [searchmsgid, setSearchmsgid] = useState(null)
     const [highlightedId, setHighlightedId] = useState(null);
     const [myprofile, setMyprofile] = useState(true);
     const [messages, setChatMessage] = useState([]);
@@ -65,14 +65,14 @@ const Home = () => {
 
             messageElement.scrollIntoView({ behavior: "auto", block: "center" });
 
-            if(searchmsgid){
+            if (searchmsgid) {
 
                 setHighlightedId(messageId);
-            
+
             }
 
-               // remove highlight after 2 seconds
-             setTimeout(() => setHighlightedId(null),300);
+            // remove highlight after 2 seconds
+            setTimeout(() => setHighlightedId(null), 300);
         }
     };
 
@@ -87,22 +87,22 @@ const Home = () => {
     }
 
 
-useEffect(() => {
-  if (!messages.length) return;
+    useEffect(() => {
+        if (!messages.length) return;
 
-  // Only scroll to bottom on first load
-  if (initialLoad.current) {
-    requestAnimationFrame(() => {
-     
-      scrollToBottom();
-     
-    });
-    initialLoad.current = false; 
-  }
-}, [messages.length]);
- // watch only the last message
+        // Only scroll to bottom on first load
+        if (initialLoad.current) {
+            requestAnimationFrame(() => {
 
-   useEffect(() => {
+                scrollToBottom();
+
+            });
+            initialLoad.current = false;
+        }
+    }, [messages.length]);
+    // watch only the last message
+
+    useEffect(() => {
 
         const notificationdata = async () => {
 
@@ -129,7 +129,7 @@ useEffect(() => {
 
     // login userinfo
     useEffect(() => {
-        if(!socket) return 
+        if (!socket) return
 
         socket.connect()
 
@@ -142,11 +142,11 @@ useEffect(() => {
         userInfo()
 
 
-        return ()=>{
+        return () => {
             socket.disconnect()  //on this component unmout socket will disconnect
         }
 
-    }, [socket,data?._id])
+    }, [socket, data?._id])
 
 
     const openMediaViewer = (mediaFiles, sender, msgId) => {
@@ -160,7 +160,7 @@ useEffect(() => {
         setSelectedMedia([]);
     };
 
- 
+
     //background for messages component
     const Messagesbackground = {
         backgroundImage: `url(${background})`,
@@ -237,104 +237,102 @@ useEffect(() => {
 
                 <div
                     className={`lg:flex-[2] lg:relative lg:translate-x-0 w-full overflow-hidden bg-white  transition-transform duration-300 ease-in-out
-                       ${!showUserList ? 'absolute translate-x-0 inset-0 min-h-screen' : '-translate-x-full'} 
+                       ${!showUserList ? 'absolute translate-x-0 inset-0 h-screen' : '-translate-x-full'} 
                          `}
                 >
 
                     {searchindmsg === 1 && chatuserinfo &&
                         <div
-                            className={`absolute inset-0 transform transition-transform duration-700 ease-in-out overflow-hidden
-                                 ${searchindmsg === 1 ? 'translate-x-0' : 'translate-x-full'} 
-                                 ${searchindmsg !== 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                            className={`absolute inset-0 transform transition-transform duration-700 ease-in-out
+                               ${searchindmsg === 1 ? 'translate-x-0' : 'translate-x-full'} 
+                               ${searchindmsg !== 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                         >
-                            {/* Full-height flex container */}
-                            <div className="flex flex-col h-full">
+                            <div className="flex flex-col h-screen">
 
-                                {/* Header with fixed height */}
-                                <div className='h-20 lg:h-14 md:h-28 min-h-[10vh] shrink-0'>
-                                    <Header
-                                        searchindmsg={searchindmsg}
-                                        stateSearch={stateSearch}
-                                        setIndmsg={setIndmsg}
+                                {/* Header - sticky at top */}
+                                <div className="sticky top-0 z-10 bg-white">
+                                    <div className='h-20 lg:h-14 md:h-28 min-h-[10vh] shrink-0'>
+                                        <Header
+                                            searchindmsg={searchindmsg}
+                                            stateSearch={stateSearch}
+                                            setIndmsg={setIndmsg}
+                                            setDeletemsgs={setDeletemsgs}
+                                            setdeleteCheckbox={setdeleteCheckbox}
+                                            setChatclear={setChatclear}
+                                            setCheckbox={setCheckbox}
+                                            setForwardmsgid={setForwardmsgid}
+                                            setReplymessage={setReplymessage}
+                                            setShowUserList={setShowUserList}
+                                            socket={socket}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Messages area - scrollable */}
+                                <div
+                                    className="flex-1 overflow-y-auto overflow-x-hidden px-5 custom-scrollbar"
+                                    ref={chatContainerRef}
+                                    style={Messagesbackground}
+                                >
+                                    <Messages
+                                        setReplymessage={setReplymessage}
+                                        setChatMessage={setChatMessage}
+                                        messages={messages}
+                                        textareaRef={textareaRef}
+                                        setForwardmsgid={setForwardmsgid}
+                                        forwardmsgid={forwardmsgid}
+                                        checkbox={checkbox}
+                                        setCheckbox={setCheckbox}
+                                        displayusers={displayusers}
+                                        setDisplayusers={setDisplayusers}
+                                        openMediaViewer={openMediaViewer}
+                                        forwardmsgobjid={forwardmsgobjid}
+                                        messageRefs={messageRefs}
+                                        deletemsgs={deletemsgs}
                                         setDeletemsgs={setDeletemsgs}
+                                        deltecheckbox={deltecheckbox}
                                         setdeleteCheckbox={setdeleteCheckbox}
                                         setChatclear={setChatclear}
-                                        setCheckbox={setCheckbox}
-                                        setForwardmsgid={setForwardmsgid}
-                                        setReplymessage={setReplymessage}
-                                        setShowUserList={setShowUserList}
-                                        socket={socket}
+                                        chatclear={chatclear}
+                                        setMeidamsgupdate={setMeidamsgupdate}
+                                        setUpdatemsgs={setUpdatemsgs}
+                                        updatemsgs={updatemsgs}
+                                        msgnlastmsg={msgnlastmsg}
+                                        userExists={userExists}
+                                        chater={chater}
+                                        setShowBlockNotification={setShowBlockNotification}
+                                        showBlockNotification={showBlockNotification}
+                                        scrollToMessage={scrollToMessage}
+                                        chatContainerRef={chatContainerRef}
+                                        searchmsgid={searchmsgid}
+                                        setSearchmsgid={setSearchmsgid}
+                                        highlightedId={highlightedId}
+                                        setHighlightedId={setHighlightedId}
+                                        initialLoad={initialLoad}
                                     />
                                 </div>
 
-                                {/* Main content area (Messages + Input) */}
-                                <div className="flex flex-col flex-1 min-h-0">
-
-                                    {/* Messages scrollable area */}
-                                    <div
-                                        className="flex-1 overflow-y-auto overflow-x-hidden px-5 custom-scrollbar"
-                                        ref={chatContainerRef}
-                                        style={Messagesbackground}
-                                    >
-                                        <Messages
-                                            setReplymessage={setReplymessage}
-                                            setChatMessage={setChatMessage}
-                                            messages={messages}
-                                            textareaRef={textareaRef}
-                                            setForwardmsgid={setForwardmsgid}
-                                            forwardmsgid={forwardmsgid}
-                                            checkbox={checkbox}
-                                            setCheckbox={setCheckbox}
-                                            displayusers={displayusers}
-                                            setDisplayusers={setDisplayusers}
-                                            openMediaViewer={openMediaViewer}
-                                            forwardmsgobjid={forwardmsgobjid}
-                                            messageRefs={messageRefs}
-                                            deletemsgs={deletemsgs}
-                                            setDeletemsgs={setDeletemsgs}
-                                            deltecheckbox={deltecheckbox}
-                                            setdeleteCheckbox={setdeleteCheckbox}
-                                            setChatclear={setChatclear}
-                                            chatclear={chatclear}
-                                            setMeidamsgupdate={setMeidamsgupdate}
-                                            setUpdatemsgs={setUpdatemsgs}
-                                            updatemsgs={updatemsgs}
-                                            msgnlastmsg={msgnlastmsg}
-                                            userExists={userExists}
-                                            chater={chater}
-                                            setShowBlockNotification={setShowBlockNotification}
-                                            showBlockNotification={showBlockNotification}
-                                            scrollToMessage={scrollToMessage}
-                                            chatContainerRef={chatContainerRef}
-                                            searchmsgid={searchmsgid}
-                                            setSearchmsgid={setSearchmsgid}
-                                            highlightedId={highlightedId}
-                                            setHighlightedId={setHighlightedId}
-                                            initialLoad={initialLoad}
-                                        />
-                                    </div>
-
-                                    {/* Input with dynamic height */}
-                                    <div className="shrink-0">
-                                        <Input
-                                            textareaRef={textareaRef}
-                                            replymessage={replymessage}
-                                            setReplymessage={setReplymessage}
-                                            setForwardmsgid={setForwardmsgid}
-                                            forwardmsgid={forwardmsgid}
-                                            setCheckbox={setCheckbox}
-                                            checkbox={checkbox}
-                                            setDisplayusers={setDisplayusers}
-                                            setmsgnlastmsg={setmsgnlastmsg}
-                                            userExists={userExists}
-                                            initialLoad={initialLoad}
-                                            setShowBlockNotification={setShowBlockNotification}
-                                        />
-                                    </div>
+                                {/* Input - sticky at bottom */}
+                                <div className="sticky bottom-0 z-10 bg-white">
+                                    <Input
+                                        textareaRef={textareaRef}
+                                        replymessage={replymessage}
+                                        setReplymessage={setReplymessage}
+                                        setForwardmsgid={setForwardmsgid}
+                                        forwardmsgid={forwardmsgid}
+                                        setCheckbox={setCheckbox}
+                                        checkbox={checkbox}
+                                        setDisplayusers={setDisplayusers}
+                                        setmsgnlastmsg={setmsgnlastmsg}
+                                        userExists={userExists}
+                                        initialLoad={initialLoad}
+                                        setShowBlockNotification={setShowBlockNotification}
+                                    />
                                 </div>
                             </div>
                         </div>
                     }
+
 
                     <div
                         className={`absolute inset-0 transform transition-transform duration-700 ease-in-out 
@@ -345,7 +343,7 @@ useEffect(() => {
                             setIndmsg={setIndmsg}
                             stateSearch={stateSearch}
                             setSearchmsgid={setSearchmsgid}
-                            search = {search}
+                            search={search}
                             chatuserinfo={chatuserinfo}
                             loginuser={data?._id}
                             scrollToMessage={scrollToMessage}

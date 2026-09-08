@@ -72,7 +72,7 @@ const Messages = ({
   const messagedropdown = useRef(null);
   const pageRef = useRef(1);
   const messagesids = messages[0]?.messages?.map((msg) => msg._id) 
-console.log(messages)
+
   const fetchChatMessages = async (pageToLoad = 1) => { //pagination for message
 
     if (isLoading || searchmsgid ) return;

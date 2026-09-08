@@ -1,2 +1,2 @@
-export const frontendbaseurl = "http://localhost:5173"
-export const backendbaseurl = "http://localhost:4000"
+export const frontendbaseurl = "https://whatsappweb.bilal-ahmed4817.workers.dev"
+export const backendbaseurl = "https://whatsappweb-backend-nksz.onrender.com"
