@@ -1,11 +1,10 @@
-import React, { useContext, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios'
-import {toast} from 'react-toastify'
-import { useNavigate } from 'react-router-dom';
+import {toast} from 'react-toastify';
 import { backendbaseurl } from '../baseurl/baseurl';
 
 const Login = () => {
-    const navigate = useNavigate()
+   
     const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,7 +31,7 @@ const Login = () => {
             if(result.data === 'login successfully'){
 
              
-                 window.location.href="http://localhost:5173/chat"
+                 window.location.href="https://whatsappweb.bilal-ahmed4817.workers.dev/chat"
              
            
                
