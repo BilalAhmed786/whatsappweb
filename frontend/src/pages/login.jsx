@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import axios from 'axios'
 import {toast} from 'react-toastify'
 import { useNavigate } from 'react-router-dom';
-import { backendbaseurl } from '../baseurl/baseurl';
+import { backendbaseurl, frontendbaseurl } from '../baseurl/baseurl';
 
 const Login = () => {
     const navigate = useNavigate()
@@ -32,7 +32,7 @@ const Login = () => {
             if(result.data === 'login successfully'){
 
              
-                 window.location.href="http://localhost:5173/chat"
+                 window.location.href=`${frontendbaseurl}/chat`
              
            
                
