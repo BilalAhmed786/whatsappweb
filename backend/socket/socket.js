@@ -6,7 +6,7 @@ const socketfun = (server) => {
 
   const io = new Server(server, {
     cors: {
-      origin: 'https://whatsappweb.bilal-ahmed4817.workers.dev',
+      origin: 'http://localhost:5173',
       methods: ['POST', 'GET', 'DELETE', 'PUT'],
       credentials: true
     },
@@ -14,7 +14,6 @@ const socketfun = (server) => {
   });
 
   io.on('connection', (socket) => {
-    
      socket.on('userId', async (userid) => {
 
     
@@ -152,9 +151,7 @@ socket.on('removeaccount',(data)=>{
   // Handle user disconnection
     socket.on('disconnect', async () => {
 
-      
       const userId = socket.userId;
-      
       const user = await userStatusoffline(userId, socket.id);
 
       if (user?.sessionid?.length === 0) {

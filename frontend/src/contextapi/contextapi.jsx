@@ -3,7 +3,7 @@ import { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { backendbaseurl } from '../baseurl/baseurl';
-const socket = io(backendbaseurl,{autoConnect:false});
+const socket = io(backendbaseurl);
 export const UserContext = createContext();
 
 

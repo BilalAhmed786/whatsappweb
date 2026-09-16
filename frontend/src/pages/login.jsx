@@ -1,17 +1,18 @@
-import React, { useContext, useState } from 'react';
-import axios from 'axios'
-import {toast} from 'react-toastify'
+import { useContext, useState } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { backendbaseurl, frontendbaseurl } from '../baseurl/baseurl';
+import { backendbaseurl } from '../baseurl/baseurl';
+import { UserContext } from '../contextapi/contextapi'; // Import context
 
 const Login = () => {
-    const navigate = useNavigate()
-    const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+  const { fetchUserInfo } = useContext(UserContext); // Access fetchUserInfo
+
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-
-
 
   const handleChange = (e) => {
     setFormData({
@@ -20,29 +21,27 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async(e) => {
-       e.preventDefault()
-   
-       try{
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      const result = await axios.post(`${backendbaseurl}/api/auth/login`,{formData},{withCredentials:true})
+    try {
+      const result = await axios.post(
+        `${backendbaseurl}/api/auth/login`,
+        { formData },
+        { withCredentials: true }
+      );
 
-          
+      if (result.data === 'login successfully') {
+     
+        if (fetchUserInfo) {
+          await fetchUserInfo();
+        }
 
-            if(result.data === 'login successfully'){
-
-             
-                 window.location.href=`${frontendbaseurl}/chat`
-             
-           
-               
-                }
-
-
-    }catch(error){
-      
-      toast.error(error.response.data)
     
+        navigate('/chat');
+      }
+    } catch (error) {
+      toast.error(error.response?.data || 'Login failed');
     }
   };
 
@@ -60,7 +59,6 @@ const Login = () => {
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter your email"
-              
             />
           </div>
 
@@ -73,11 +71,10 @@ const Login = () => {
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter your password"
-          
             />
           </div>
 
-          <button className="font-robot w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors">
+          <button className="font-roboto w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors">
             Login
           </button>
         </form>

@@ -37,7 +37,7 @@ const userStatusoffline = async(userId,sessionId)=>{
         const userstatus = await User.findByIdAndUpdate(
           userId,
           {$pull: { sessionid: sessionId } },
-          { new: true }  // Return the updated document
+          { new: true }  
         );    
 
         return userstatus
