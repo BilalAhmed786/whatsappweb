@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "../contextapi/contextapi";
-import { FaEllipsisH } from "react-icons/fa";
+import { FaEllipsisV, FaUser, FaAddressBook, FaBan, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Usercontacts from "../utils/usercontacts";
 import Blockcontacts from "../utils/blockcontacts";
@@ -29,12 +29,10 @@ const Users = ({
   const [toggleblock, setBlock] = useState(false);
   const [togglecontact, setContacts] = useState(true);
   const [chatusers, setChatusers] = useState([]);
-  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   const handleLogout = async () => {
     try {
-      
       if (socket) {
         socket.disconnect();
       }
@@ -108,98 +106,143 @@ const Users = ({
   }, [socket]);
 
   return (
-    <div className="w-full h-screen">
-      {/* Topbar */}
-      <div className="relative flex items-center justify-between w-full h-[10vh] p-[15px] bg-gray-600">
-        <div>
-          <h2 className="font-sans font-medium text-lg text-white">Chats</h2>
+    <div className="w-full h-screen bg-slate-950 text-slate-100 flex flex-col border-r border-slate-800/80 font-sans">
+      
+      {/* Top Bar Header */}
+      <div className="relative flex items-center justify-between w-full h-[10vh] min-h-[70px] px-4 py-2 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 z-30">
+        <div className="flex items-center space-x-3">
+          <h2 className="font-bold text-lg text-white tracking-tight">Chats</h2>
         </div>
-        <div className="flex justify-center items-center gap-3 relative">
-          {data?.profilepicture ? (
-            <img
-              className="w-10 h-10 rounded-full"
-              src={`${backendbaseurl}/images/${data?.profilepicture}`}
-              alt="Profile"
-            />
-          ) : (
-            <img className="w-12 h-12 rounded-full" src={Userpic} alt="User" />
-          )}
-          <FaEllipsisH
-            className="mt-2 cursor-pointer text-white"
-            onClick={() => {
-              setDropdown((prev) => !prev);
-              setCheckbox(false);
-              setForwardmsgid([]);
-              setReplymessage(false);
-            }}
-          />
-          {dropdown && (
-            <nav
-              ref={dropdownRef}
-              className="absolute w-32 z-50 py-1 bg-white top-10 right-0.5"
-              onClick={() => setDropdown(false)}
+
+        {/* Profile Avatar & Options Toggle */}
+        <div className="flex items-center space-x-2">
+          <div 
+            className="cursor-pointer"
+            onClick={() => setMyprofile(false)}
+            title="View Profile"
+          >
+            {data?.profilepicture ? (
+              <img
+                className="w-10 h-10 rounded-full object-cover border-2 border-slate-700/80 shadow-md transition-transform hover:scale-105"
+                src={`${data?.profilepicture}`}
+                alt="Profile"
+              />
+            ) : (
+              <img 
+                className="w-10 h-10 rounded-full object-cover border-2 border-slate-700/80 shadow-md transition-transform hover:scale-105" 
+                src={Userpic} 
+                alt="User" 
+              />
+            )}
+          </div>
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => {
+                setDropdown((prev) => !prev);
+                setCheckbox(false);
+                setForwardmsgid([]);
+                setReplymessage(false);
+              }}
+              className="p-2.5 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all duration-200 focus:outline-none"
+              title="More Options"
             >
-              <ul className="w-full cursor-pointer">
-                <div onClick={() => setMyprofile(false)}>
-                  <li className="mb-2 p-2 border-b-2 lightgray hover:bg-slate-100">
-                    Profile
+              <FaEllipsisV className="text-base" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {dropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden z-50 transform transition-all duration-200">
+                <ul className="py-1.5 text-sm text-slate-300">
+                  <li>
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-800/80 hover:text-white transition-colors text-left"
+                      onClick={() => {
+                        setMyprofile(false);
+                        setDropdown(false);
+                      }}
+                    >
+                      <FaUser className="text-indigo-400 text-xs" />
+                      <span>My Profile</span>
+                    </button>
                   </li>
-                </div>
-                <div
-                  onClick={() => {
-                    setBlock(false);
-                    setContacts(true);
-                  }}
-                >
-                  <li className="mb-2 p-2 border-b-2 lightgray hover:bg-slate-100">
-                    Contacts
+
+                  <li>
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-800/80 hover:text-white transition-colors text-left"
+                      onClick={() => {
+                        setBlock(false);
+                        setContacts(true);
+                        setDropdown(false);
+                      }}
+                    >
+                      <FaAddressBook className="text-emerald-400 text-xs" />
+                      <span>Contacts</span>
+                    </button>
                   </li>
-                </div>
-                <div
-                  onClick={() => {
-                    setBlock(true);
-                    setContacts(false);
-                  }}
-                >
-                  <li className="mb-2 p-2 border-b-2 lightgray hover:bg-slate-100">
-                    Block Users
+
+                  <li>
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-800/80 hover:text-white transition-colors text-left"
+                      onClick={() => {
+                        setBlock(true);
+                        setContacts(false);
+                        setDropdown(false);
+                      }}
+                    >
+                      <FaBan className="text-amber-400 text-xs" />
+                      <span>Blocked Users</span>
+                    </button>
                   </li>
-                </div>
-                <div onClick={handleLogout}>
-                  <li className="mb-2 p-2 border-b-2 lightgray hover:bg-slate-100">
-                    Logout
+
+                  <li className="border-t border-slate-800/80 my-1"></li>
+
+                  <li>
+                    <button
+                      className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-rose-500/10 hover:text-rose-400 text-rose-400/90 transition-colors text-left"
+                      onClick={() => {
+                        setDropdown(false);
+                        handleLogout();
+                      }}
+                    >
+                      <FaSignOutAlt className="text-xs" />
+                      <span>Logout</span>
+                    </button>
                   </li>
-                </div>
-              </ul>
-            </nav>
-          )}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {togglecontact && (
-        <Usercontacts
-          initialLoad={initialLoad}
-          setIndmsg={setIndmsg}
-          msgnlastmsg={msgnlastmsg}
-          updatemsgs={updatemsgs}
-          setReplymessage={setReplymessage}
-          setChatusers={setChatusers}
-          chatusers={chatusers}
-          messages={messages}
-          messageRefs={messageRefs}
-          setShowUserList={setShowUserList}
-          lastmessageupdate={lastmessageupdate}
-          setSearchmsgid={setSearchmsgid}
-          scrollToMessage={scrollToMessage}
-        />
-      )}
-      {toggleblock && (
-        <Blockcontacts
-          data={data}
-          fetchUserInfo={fetchUserInfo}
-          socket={socket}
-        />
-      )}
+      {/* Child View Container */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {togglecontact && (
+          <Usercontacts
+            initialLoad={initialLoad}
+            setIndmsg={setIndmsg}
+            msgnlastmsg={msgnlastmsg}
+            updatemsgs={updatemsgs}
+            setReplymessage={setReplymessage}
+            setChatusers={setChatusers}
+            chatusers={chatusers}
+            messages={messages}
+            messageRefs={messageRefs}
+            setShowUserList={setShowUserList}
+            lastmessageupdate={lastmessageupdate}
+            setSearchmsgid={setSearchmsgid}
+            scrollToMessage={scrollToMessage}
+          />
+        )}
+        {toggleblock && (
+          <Blockcontacts
+            data={data}
+            fetchUserInfo={fetchUserInfo}
+            socket={socket}
+          />
+        )}
+      </div>
     </div>
   );
 };

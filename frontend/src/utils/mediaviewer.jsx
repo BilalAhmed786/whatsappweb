@@ -18,32 +18,60 @@ const MediaViewer = ({
   onClose,
   userExists,
   setShowBlockNotification
-
 }) => {
+  // Helper to extract clean file extension from full URL or path
+  const getFileExtension = (url = "") => {
+    const cleanUrl = url.split("?")[0];
+    return cleanUrl.split(".").pop().toLowerCase();
+  };
 
+  // Helper to check if a URL or file object is a video
+  const isVideo = (fileObj) => {
+    const text = fileObj?.text || "";
+    const ext = getFileExtension(text);
+    const videoExtensions = ["mp4", "avi", "mov", "mkv", "webm"];
+    
+    return (
+      videoExtensions.includes(ext) || 
+      text.includes("/video/upload/") || 
+      text.includes("/saifchat/videos/")
+    );
+  };
 
-  // Filter out document files
-  const filteredMediaFiles = mediaFiles.mediaFiles.filter((file) => {
-    const fileType = file.text.split(".").pop().toLowerCase();
-    return !["pdf", "doc", "docx", "webm"].includes(fileType);
+  // Helper to resolve full CDN URL vs local backend path
+  const getMediaUrl = (fileObj) => {
+    const url = fileObj?.text || "";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return `${backendbaseurl}/${isVideo(fileObj) ? "videos" : "images"}/${url}`;
+  };
+
+  // Helper for sender profile picture
+  const getProfilePicUrl = (picPath) => {
+    if (!picPath) return "";
+    if (picPath.startsWith("http://") || picPath.startsWith("https://")) {
+      return picPath;
+    }
+    return `${picPath}`;
+  };
+
+  // Filter out non-media document files (PDFs, docs)
+  const filteredMediaFiles = (mediaFiles?.mediaFiles || []).filter((file) => {
+    const ext = getFileExtension(file?.text || "");
+    return !["pdf", "doc", "docx"].includes(ext);
   });
 
-  const { data,socket,chatuserinfo } = useContext(UserContext);
+  const { data, socket, chatuserinfo } = useContext(UserContext);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reactions, setReactions] = useState({});
 
-  //reply media message
-
-
-
   const replyHandler = (msg) => {
-
-    textareaRef.current.focus()
-    setReplymessage(msg)
-    onClose()
-
-  }
+    textareaRef.current?.focus();
+    setReplymessage(msg);
+    onClose();
+  };
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % filteredMediaFiles.length);
@@ -66,29 +94,30 @@ const MediaViewer = ({
     [goToNext, goToPrev, onClose]
   );
 
+  // Download media via your backend proxy route
   const downloadMedia = () => {
-    const fileName = filteredMediaFiles[currentIndex].text;
+    const currentMedia = filteredMediaFiles[currentIndex];
+    const mediaUrl = getMediaUrl(currentMedia);
+    
+    // Extract a clean file name from path or default fallback
+    const rawFileName = currentMedia.text.split("/").pop().split("?")[0];
+    const fileName = rawFileName || `download_${Date.now()}`;
+
+    const downloadEndpoint = `${backendbaseurl}/api/files/download?url=${encodeURIComponent(mediaUrl)}&filename=${encodeURIComponent(fileName)}`;
+    
     const link = document.createElement("a");
-    link.href = `${backendbaseurl}/files/download/${fileName}`;
+    link.href = downloadEndpoint;
     link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const isVideo = (fileName) => {
-    const videoExtensions = ["mp4", "avi", "mov"];
-    return videoExtensions.includes(fileName.text.split(".").pop().toLowerCase());
-  };
-
   // Handle emoji reaction
-  const handleReaction = async (emoji, objectId, msgId, userId,chatuserid,isviewed) => {
-
-    if(data.blockedUsers.some((user)=>user.userId === chatuserid)){
-
-      setShowBlockNotification({reaction:'reaction'})
-     
-      return
+  const handleReaction = async (emoji, objectId, msgId, userId, chatuserid, isviewed) => {
+    if (data.blockedUsers?.some((user) => user.userId === chatuserid)) {
+      setShowBlockNotification({ reaction: "reaction" });
+      return;
     }
 
     setReactions((prevState) => ({
@@ -97,40 +126,38 @@ const MediaViewer = ({
     }));
 
     try {
-      const result = await axios.post(`${backendbaseurl}/api/chat/mediareaction/${msgId}`, { emoji, objectId, userId,chatuserid,isviewed},{withCredentials:true});
-    
-      setUpdatemsgs(Date.now())
-      socket?.emit('mediareaction',{msg:result.data,senderid:userId,receiverid:chatuserid})
-      
+      const result = await axios.post(
+        `${backendbaseurl}/api/chat/mediareaction/${msgId}`,
+        { emoji, objectId, userId, chatuserid, isviewed },
+        { withCredentials: true }
+      );
+
+      setUpdatemsgs(Date.now());
+      socket?.emit("mediareaction", { msg: result.data, senderid: userId, receiverid: chatuserid });
     } catch (error) {
-      console.log(error);
+      console.error("Reaction error:", error);
     }
   };
 
   // Handle delete media
   const handleDelete = async (msgId, objectId, userId) => {
     try {
-
-      await axios.post(`${backendbaseurl}/api/chat/deletesingleMedia/${msgId}`, { objectId, userId },{withCredentials:true});
-
+      await axios.post(
+        `${backendbaseurl}/api/chat/deletesingleMedia/${msgId}`,
+        { objectId, userId },
+        { withCredentials: true }
+      );
     } catch (error) {
-
-      console.log("Error deleting media:", error);
-
+      console.error("Error deleting media:", error);
     }
   };
 
-  //handle forward message
-
-
+  // Handle forward message
   const onForward = (msgId, objectId) => {
-
-    setDisplayusers(true)
-    setForwardmsgid(msgId)
-    setForwardmsgobjid(objectId)
-
-  }
-
+    setDisplayusers(true);
+    setForwardmsgid(msgId);
+    setForwardmsgobjid(objectId);
+  };
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -143,133 +170,150 @@ const MediaViewer = ({
     return null;
   }
 
+  const currentFile = filteredMediaFiles[currentIndex];
+  const currentMediaUrl = getMediaUrl(currentFile);
+
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center">
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 text-white bg-gray-800 px-3 py-2 rounded-md z-50"
+        className="absolute top-5 right-5 text-white bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-lg z-50 transition-all font-medium text-sm"
       >
         Close
       </button>
 
-      {/* User Profile */}
-      <div className="absolute top-5 left-5 flex items-center gap-2">
+      {/* Sender Profile Header */}
+      <div className="absolute top-5 left-5 flex items-center gap-3 z-50">
         {mediaFiles.sender?.profilepicture ? (
           <img
-            src={`${backendbaseurl}/images/${mediaFiles.sender?.profilepicture}`}
+            src={getProfilePicUrl(mediaFiles.sender.profilepicture)}
             alt="User Profile"
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full object-cover border border-slate-700 shadow-md"
           />
         ) : (
-          <span className="absolute w-36 left-0 z-50 text-white">{mediaFiles.sender?.name}</span>
+          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">
+            {mediaFiles.sender?.name?.charAt(0) || "U"}
+          </div>
         )}
+        <span className="text-white font-medium text-sm drop-shadow">
+          {mediaFiles.sender?.name || "Shared Media"}
+        </span>
       </div>
 
-      {/* Media Carousel */}
-      <div className="w-full h-full flex flex-col justify-center items-center relative">
-        {isVideo(filteredMediaFiles[currentIndex]) ? (
+      {/* Media Carousel Area */}
+      <div className="w-full h-full flex flex-col justify-center items-center relative p-4">
+        {isVideo(currentFile) ? (
           <video
-            src={`${backendbaseurl}/videos/${filteredMediaFiles[currentIndex].text}`}
+            src={currentMediaUrl}
             controls
-            className="max-w-full h-[95%] object-contain"
+            autoPlay
+            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
           />
         ) : (
           <img
-            src={`${backendbaseurl}/images/${filteredMediaFiles[currentIndex].text}`}
+            src={currentMediaUrl}
             alt={`media-${currentIndex}`}
-            className="w-full h-[95%] object-contain"
+            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
           />
         )}
 
-        {/* Navigation Buttons */}
+        {/* Navigation Arrows */}
         {filteredMediaFiles.length > 1 && (
           <>
             <button
               onClick={goToPrev}
-              className="absolute left-5 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-full"
+              className="absolute left-5 top-1/2 transform -translate-y-1/2 bg-slate-800/80 hover:bg-slate-700 text-white p-3 rounded-full z-50 transition-all"
             >
               &#8592;
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-5 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-2 rounded-full"
+              className="absolute right-5 top-1/2 transform -translate-y-1/2 bg-slate-800/80 hover:bg-slate-700 text-white p-3 rounded-full z-50 transition-all"
             >
               &#8594;
             </button>
           </>
         )}
 
-        {/* Reaction, Download, Delete, and Forward Buttons */}
-        {mediaFiles.msgId ?
+        {/* Floating Action Controls */}
+        {mediaFiles.msgId && (
           <>
-            <div className="absolute top-20 left-2 flex flex-wrap gap-5">
-              {/* Download Button with Tooltip */}
-
+            <div className="absolute top-20 left-5 flex flex-wrap gap-3 z-50">
+              {/* Download */}
               <div className="relative group">
-                <button onClick={downloadMedia} className="text-white bg-black rounded-full p-2 hover:bg-gray-800">
-                  <FaDownload />
+                <button
+                  onClick={downloadMedia}
+                  className="text-white bg-slate-900/80 p-2.5 rounded-full hover:bg-slate-800 border border-slate-700 transition-all"
+                >
+                  <FaDownload className="text-sm" />
                 </button>
-                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Download
                 </span>
               </div>
 
-
-              {/* Reply Button with Tooltip */}
+              {/* Reply */}
               <div className="relative group">
                 <button
-                  className="text-white bg-black rounded-full p-2 hover:bg-gray-800"
+                  className="text-white bg-slate-900/80 p-2.5 rounded-full hover:bg-slate-800 border border-slate-700 transition-all"
                   onClick={() =>
                     replyHandler({
-                      objectId: filteredMediaFiles[currentIndex]._id,
+                      objectId: currentFile._id,
                       repliedtomsgId: mediaFiles.msgId,
-                      repliedmsg: filteredMediaFiles[currentIndex].text,
+                      repliedmsg: currentMediaUrl,
                     })
                   }
                 >
-                  <FaReply />
+                  <FaReply className="text-sm" />
                 </button>
-                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Reply
                 </span>
               </div>
 
-              {/* Forward Button with Tooltip */}
+              {/* Forward */}
               <div className="relative group">
-                <button onClick={() => onForward(mediaFiles.msgId, filteredMediaFiles[currentIndex]._id)} className="text-white bg-black rounded-full p-2 hover:bg-gray-800">
-                  <FaShare />
+                <button
+                  onClick={() => onForward(mediaFiles.msgId, currentFile._id)}
+                  className="text-white bg-slate-900/80 p-2.5 rounded-full hover:bg-slate-800 border border-slate-700 transition-all"
+                >
+                  <FaShare className="text-sm" />
                 </button>
-                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Forward
                 </span>
               </div>
 
-              {/* Delete Button with Tooltip */}
+              {/* Delete */}
               <div className="relative group">
-                <button onClick={() => handleDelete(mediaFiles.msgId, filteredMediaFiles[currentIndex]._id, data._id)} className="text-white bg-black rounded-full p-2 hover:bg-gray-800">
-                  <FaTrash />
+                <button
+                  onClick={() => handleDelete(mediaFiles.msgId, currentFile._id, data._id)}
+                  className="text-white bg-slate-900/80 p-2.5 rounded-full hover:bg-rose-900/80 border border-slate-700 transition-all"
+                >
+                  <FaTrash className="text-sm" />
                 </button>
-                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 transition-opacity duration-200 group-hover:opacity-100 pointer-events-none">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   Delete
                 </span>
               </div>
 
-
-              {/* Emoji Reactions */}
-              <div className="flex gap-2">
+              {/* Emoji Reactions Bar */}
+              <div className="flex gap-1.5 bg-slate-900/80 p-1.5 rounded-full border border-slate-700">
                 {EMOJIS.map((emoji) => (
                   <button
                     key={emoji}
-                    onClick={() => handleReaction(
+                    onClick={() =>
+                      handleReaction(
                         emoji,
-                        filteredMediaFiles[currentIndex]._id,
+                        currentFile._id,
                         mediaFiles.msgId,
                         data._id,
-                        chatuserinfo.userId,
-                         userExists && chatuserinfo.status === 1 ? true:false
-                      )}
-                    className="text-2xl"
+                        chatuserinfo?.userId,
+                        userExists && chatuserinfo?.status === 1
+                      )
+                    }
+                    className="text-xl hover:scale-125 transition-transform px-1"
                   >
                     {emoji}
                   </button>
@@ -277,15 +321,14 @@ const MediaViewer = ({
               </div>
             </div>
 
-            {/* Display Selected Reaction */}
+            {/* Selected Reaction Overlay */}
             {reactions[currentIndex] && (
-              <div className="absolute bottom-20 left-10 text-4xl">{reactions[currentIndex]}</div>
+              <div className="absolute bottom-10 left-10 text-4xl animate-bounce">
+                {reactions[currentIndex]}
+              </div>
             )}
           </>
-          : ""
-        }
-
-
+        )}
       </div>
     </div>,
     document.body

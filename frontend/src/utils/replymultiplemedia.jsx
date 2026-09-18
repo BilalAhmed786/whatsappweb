@@ -22,7 +22,7 @@ const replymultiplemedia = (media, setReply) => {
             return (
               <div key={index} className="relative">
                 <img
-                  src={`${backendbaseurl}/images/${file.text}`}
+                  src={`${file.text}`}
                   alt={`media-${index}`}
                   className="w-40 h-40 rounded-lg cursor-pointer object-cover"
                 />

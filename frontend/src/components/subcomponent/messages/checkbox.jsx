@@ -1,44 +1,37 @@
+import React from 'react';
 
-const checkbox = ({msg,checkbox,forwardmsgid,setForwardmsgid,deltecheckbox}) => {
-  
-
- const toggleMessageSelection = (msgId) => {
+const Checkbox = ({ msg, checkbox, forwardmsgid, setForwardmsgid, deltecheckbox, setDeletemsgs }) => {
+  const toggleMessageSelection = (msgId) => {
     setForwardmsgid((prev) =>
       prev.includes(msgId)
-        ? prev.filter((id) => id !== msgId) // Remove if already selected
-        : [...prev, msgId] // Add if not already selected
+        ? prev.filter((id) => id !== msgId)
+        : [...prev, msgId]
     );
   };
 
-
-
   return (
-    <div className="flex items-center">
-
-      {checkbox &&
+    <div className="flex items-center px-2">
+      {checkbox && (
         <input
+          className="accent-indigo-500 rounded cursor-pointer"
           type="checkbox"
-          checked={forwardmsgid.includes(msg._id)} // Show checked state for selected IDs
+          checked={forwardmsgid.includes(msg._id)}
+          onChange={() => toggleMessageSelection(msg?._id)}
+        />
+      )}
+      {deltecheckbox && (
+        <input
+          className="accent-rose-500 rounded cursor-pointer"
+          type="checkbox"
+          checked={forwardmsgid.includes(msg._id)}
           onChange={() => {
-            toggleMessageSelection(msg?._id)
-
+            toggleMessageSelection(msg._id);
+            if (setDeletemsgs) setDeletemsgs(true);
           }}
         />
-      }
-      {deltecheckbox &&
-        <input
-          type="checkbox"
-          checked={forwardmsgid.includes(msg._id)} // Show checked state for selected IDs
-          onChange={() => {
-            toggleMessageSelection(msg._id)
-            setDeletemsgs(true)
-
-          }}
-        />
-      }
-
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default checkbox
+export default Checkbox;

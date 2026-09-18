@@ -7,7 +7,7 @@ const textmsg = ({msg,data,highlightedId}) => {
             {msg.replyTo?.messageId &&
 
                 <span
-                    className={`border-l-4 mt-3 text-justify break-all border-red-500 pl-2 opacity-60 ${msg.sender._id === data._id ? 'text-white' : 'text-black'}`}>
+                    className={`border-l-4 mt-3 text-justify break-all border-red-500 pl-2 opacity-60 ${msg.sender._id === data._id ? 'text-black' : 'text-white'}`}>
                     {msg.replyTo.messageId.text}
                 </span>
             }

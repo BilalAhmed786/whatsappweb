@@ -1,5 +1,3 @@
-import { backendbaseurl } from "../baseurl/baseurl";
-
 const repliedmediadisplay = (media) => {
   if (!media || media.length === 0) return null;
 
@@ -24,7 +22,7 @@ const repliedmediadisplay = (media) => {
           return (
             <div key={index} className="relative">
               <img
-                src={`${backendbaseurl}/images/${file.text}`}
+                src={`${file.text}`}
                 alt={`media-${index}`}
                 className={`${visibleMedia.length !== 1 ? "w-40 h-40" : "w-80 h-80"
                   } rounded-lg mt-2 cursor-pointer object-cover`}
@@ -44,7 +42,7 @@ const repliedmediadisplay = (media) => {
                   } rounded-lg mt-2 cursor-pointer object-cover`}
               >
                 <source
-                  src={`${backendbaseurl}/videos/${file.text}`}
+                  src={`${file.text}`}
                   type={`video/${fileType}`}
                 />
               </video>
@@ -62,7 +60,7 @@ const repliedmediadisplay = (media) => {
               className="max-w-[100%]"
             >
               <source
-                src={`${backendbaseurl}/audio/${file.text}`}
+                src={`${file.text}`}
                 type={`audio/${fileType}`}
               />
             </audio>
@@ -74,7 +72,7 @@ const repliedmediadisplay = (media) => {
           return (
             <a
               key={index}
-              href={`${backendbaseurl}/documents/${file.text}`}
+              href={`${file.text}`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold text-red-500 inline"

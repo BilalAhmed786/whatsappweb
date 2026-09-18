@@ -1,16 +1,13 @@
-import React, { useRef, useState, useContext } from 'react';
-import { FaTimes, FaCamera, FaTrash, FaEdit } from 'react-icons/fa';
-import DeleteAccountModal from '../utils/notification'
+import { useRef, useState, useContext } from 'react';
+import { FaTimes, FaCamera, FaTrash, FaEdit, FaCheck, FaUser, FaInfoCircle, FaImages } from 'react-icons/fa';
+import DeleteAccountModal from '../utils/notification';
 import axios from 'axios';
 import { UserContext } from '../contextapi/contextapi';
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import Userpic from '../images/user.jpg';
 import { backendbaseurl } from '../baseurl/baseurl';
 
-
-
-const MyProfile = ({ setMyprofile,socket}) => {
-
-
+const MyProfile = ({ setMyprofile, socket }) => {
   const profilepic = useRef();
   const { data, fetchUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
@@ -20,32 +17,30 @@ const MyProfile = ({ setMyprofile,socket}) => {
   const [about, setAbout] = useState(data.about);
   const [showModal, setShowModal] = useState(false);
 
-
-
   const handleDeleteClick = () => {
     setShowModal(true);
   };
 
   const closeModal = () => {
-
     setShowModal(false);
   };
-    // Remove account
-    const confirmDelete = async () => {
-      try {
-       const result = await axios.delete(`${backendbaseurl}/api/users/deleteuser/${data._id}`,{withCredentials:true});
 
-              socket.emit('removeaccount',{userid:result?.data})
-              if(result){
+  // Remove account
+  const confirmDelete = async () => {
+    try {
+      const result = await axios.delete(
+        `${backendbaseurl}/api/users/deleteuser/${data._id}`,
+        { withCredentials: true }
+      );
 
-                navigate('/login')
-              }     
-
-
-             } catch (error) {
-        console.log('Error removing account:', error);
+      socket.emit('removeaccount', { userid: result?.data });
+      if (result) {
+        navigate('/login');
       }
-    };
+    } catch (error) {
+      console.log('Error removing account:', error);
+    }
+  };
 
   // Handle file input click
   const handleProfilepicClick = () => {
@@ -64,7 +59,9 @@ const MyProfile = ({ setMyprofile,socket}) => {
 
       try {
         // Upload the file to the server
-        await axios.post(`${backendbaseurl}/api/users/profilepic`, formData,{withCredentials:true});
+        await axios.post(`${backendbaseurl}/api/users/profilepic`, formData, {
+          withCredentials: true,
+        });
         fetchUserInfo();
         console.log('Profile picture uploaded successfully');
       } catch (error) {
@@ -75,13 +72,15 @@ const MyProfile = ({ setMyprofile,socket}) => {
     }
   };
 
-
-
   // Handle name update submission
   const updateUsername = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${backendbaseurl}/api/users/updatename`, { userid: data._id, name },{withCredentials:true});
+      await axios.put(
+        `${backendbaseurl}/api/users/updatename`,
+        { userid: data._id, name },
+        { withCredentials: true }
+      );
       fetchUserInfo(); // Fetch updated user info after name change
       setEditName(false);
     } catch (error) {
@@ -93,125 +92,193 @@ const MyProfile = ({ setMyprofile,socket}) => {
   const updateAbout = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${backendbaseurl}/api/users/updateabout`, { userid: data._id, about },{withCredentials:true});
-       setEditAbout(false);
-    
-      
-    
-      } catch (error) {
+      await axios.put(
+        `${backendbaseurl}/api/users/updateabout`,
+        { userid: data._id, about },
+        { withCredentials: true }
+      );
+      setEditAbout(false);
+    } catch (error) {
       console.log('Error updating about:', error);
     }
   };
 
   return (
-    <div className="custom-scrollbar w-full h-screen overflow-y-auto overflow-x-hidden">
-      <span className="block m-3 cursor-pointer" onClick={() => setMyprofile(true)}>
-        <FaTimes />
-      </span>
-      <h5 className="ml-5 mt-5">Contact info</h5>
-      <div className="relative flex justify-center items-center">
-        <img
-          className="w-60 h-60 rounded-full"
-          src={`${backendbaseurl}/images/${data.profilepicture}`}
-          alt="Profile"
-        />
-        <span className="absolute">
-          <FaCamera className="text-3xl cursor-pointer" onClick={handleProfilepicClick} />
-        </span>
-        <input
-          ref={profilepic}
-          className="hidden"
-          type="file"
-          accept="image/*" // Limit to image files
-          onChange={handleFileChange} // Trigger file upload when a file is selected
-        />
-      </div>
-
-      {/* Name Section */}
-      <div className="relative flex gap-2 mt-4 items-center justify-center">
-        {!editName ? (
-          <>
-            <h2>{name}</h2>
-            <button className="text-xs mt-0.5" onClick={() => setEditName(true)}>
-              <FaEdit />
-            </button>
-          </>
-        ) : (
-          <form onSubmit={updateUsername} className="flex items-center gap-2">
-            <input
-              className="outline-none pl-2 ml-4 border lightgray"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              name="name"
-              type="text"
-            />
-            <button
-              className='font-sans underline text-sm  text-blue-500' 
-              type="submit"
-              >Update
-            </button>
-            <FaTimes className="absolute text-gray-600 text-xs cursor-pointer" 
-            onClick={() => setEditName(false)} />
-          </form>
-        )}
-      </div>
-
-      {/* About Section */}
-      <div className="border-t-8 border-b-8 via-gray p-5 mt-5">
-        <div className="flex gap-2">
-          <h4>About</h4>
-          <button onClick={() => setEditAbout(true)}>
-            <FaEdit />
-          </button>
-        </div>
-        {!editAbout ? (
-          <div className='w-96'>
-            <p className="mt-4 ml-4">{about}</p>
-          </div>
-        ) : (
-          <form onSubmit={updateAbout} 
-          className="relative">
-            <input
-              className="outline-none border lightgray pl-2  mt-3 ml-7"
-              value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              type="text"
-            />
-            <button 
-              className='font-sans ml-4 underline text-sm  text-blue-500' 
-              type="submit">
-              Update
-            </button>
-            <FaTimes className="absolute  text-gray-600 text-xs top-5 ml-2 cursor-pointer" onClick={() => setEditAbout(false)} />
-          </form>
-        )}
-      </div>
-
-      {/* Media Section */}
-      <div className="border-b-8 via-gray p-5 mt-5">
-        <h4>Media Link And Docs</h4>
-        <div>
-          <img src="" alt="" />
-        </div>
-      </div>
-
-      {/* Remove Account */}
-      <div
-        className="border-b-8 cursor-pointer via-gray p-5 mt-5"
-        onClick={handleDeleteClick}
-      >
-        <span className="flex gap-1 text-red-600">
-          <FaTrash className="mt-1" />
-          Remove Account
-        </span>
-       </div>
+    <div className="custom-scrollbar w-full h-screen overflow-y-auto overflow-x-hidden bg-slate-950 text-slate-100 font-sans border-l border-slate-800/80 flex flex-col">
       
-       <DeleteAccountModal
-          show={showModal}
-          onClose={closeModal}
-          onConfirm={confirmDelete}
-      />
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 flex items-center justify-between p-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80">
+        <h3 className="font-semibold text-sm text-slate-200">Contact Info</h3>
+        <button
+          onClick={() => setMyprofile(true)}
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+          title="Close Profile"
+        >
+          <FaTimes className="text-base" />
+        </button>
+      </div>
 
+      <div className="p-4 space-y-6 flex-1">
+        
+        {/* Profile Picture Upload Section */}
+        <div className="flex flex-col items-center justify-center pt-2">
+          <div className="relative group cursor-pointer" onClick={handleProfilepicClick}>
+            <img
+              className="w-44 h-44 rounded-full object-cover border-4 border-slate-800 shadow-xl transition-all duration-300 group-hover:opacity-80"
+              src={
+                data.profilepicture
+                  ? `${data.profilepicture}`
+                  : Userpic
+              }
+              alt="Profile"
+            />
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <FaCamera className="text-2xl text-white drop-shadow-md" />
+            </div>
+            <div className="absolute bottom-1 right-2 p-2.5 rounded-full bg-indigo-600 border-2 border-slate-900 text-white shadow-lg">
+              <FaCamera className="text-xs" />
+            </div>
+          </div>
+          <input
+            ref={profilepic}
+            className="hidden"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+        </div>
+
+        {/* Name Section */}
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 space-y-2">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+            <div className="flex items-center space-x-2">
+              <FaUser className="text-indigo-400" />
+              <span>Your Name</span>
+            </div>
+            {!editName && (
+              <button
+                onClick={() => setEditName(true)}
+                className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 rounded-lg transition-colors"
+                title="Edit Name"
+              >
+                <FaEdit className="text-xs" />
+              </button>
+            )}
+          </div>
+
+          {!editName ? (
+            <p className="text-sm font-semibold text-slate-100 break-words pt-1">
+              {name || 'No name set'}
+            </p>
+          ) : (
+            <form onSubmit={updateUsername} className="flex items-center space-x-2 pt-1">
+              <input
+                className="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                name="name"
+                type="text"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors"
+                title="Save"
+              >
+                <FaCheck className="text-xs" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditName(false)}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors"
+                title="Cancel"
+              >
+                <FaTimes className="text-xs" />
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* About Section */}
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 space-y-2">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+            <div className="flex items-center space-x-2">
+              <FaInfoCircle className="text-emerald-400" />
+              <span>About</span>
+            </div>
+            {!editAbout && (
+              <button
+                onClick={() => setEditAbout(true)}
+                className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-lg transition-colors"
+                title="Edit About"
+              >
+                <FaEdit className="text-xs" />
+              </button>
+            )}
+          </div>
+
+          {!editAbout ? (
+            <p className="text-xs leading-relaxed text-slate-300 break-words pt-1">
+              {about || 'Hey there! I am using Saif Chat.'}
+            </p>
+          ) : (
+            <form onSubmit={updateAbout} className="flex items-center space-x-2 pt-1">
+              <input
+                className="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50"
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+                type="text"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors"
+                title="Save"
+              >
+                <FaCheck className="text-xs" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditAbout(false)}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors"
+                title="Cancel"
+              >
+                <FaTimes className="text-xs" />
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Media Section */}
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 space-y-2">
+          <div className="flex items-center space-x-2 text-xs font-medium text-slate-400">
+            <FaImages className="text-amber-400" />
+            <span>Media, Links and Docs</span>
+          </div>
+          <p className="text-xs text-slate-500 italic pt-1">No shared media available</p>
+        </div>
+
+        {/* Remove Account Section */}
+        <div
+          onClick={handleDeleteClick}
+          className="group flex items-center space-x-3 p-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/30 cursor-pointer transition-all duration-200"
+        >
+          <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400">
+            <FaTrash className="text-xs" />
+          </div>
+          <span className="text-xs font-semibold text-rose-400 group-hover:text-rose-300">
+            Remove Account
+          </span>
+        </div>
+
+      </div>
+
+      {/* Delete Account Modal Component */}
+      <DeleteAccountModal
+        show={showModal}
+        onClose={closeModal}
+        onConfirm={confirmDelete}
+      />
 
     </div>
   );

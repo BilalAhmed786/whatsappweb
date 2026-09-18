@@ -1,20 +1,20 @@
 import { getlastemoji } from './getlastemoji';
 import { countunreadmsgs } from './countunread';
 import { FaCircle, FaMicrophone, FaFile } from 'react-icons/fa';
-import Userpic from '../../../images/user.jpg'
+import Userpic from '../../../images/user.jpg';
 import mediaMsgicon from './mediamsgicon';
 import { format } from "timeago.js";
 import { backendbaseurl } from '../../../baseurl/baseurl';
 import { useContext, useEffect } from 'react';
 import { UserContext } from '../../../contextapi/contextapi';
+
 const ChatUserList = ({ chatusers, lastmessage, data, notifymsg, setIndmsg, initialLoad, setSearchmsgid }) => {
-  const { setNotific } = useContext(UserContext)
+  const { setNotific } = useContext(UserContext);
+
   const enrichedUsers = chatusers.map((user) => {
     const userMessages = lastmessage?.filter((msg) =>
       msg.users?.includes(user._id)
     );
-
-
 
     const lastMsg =
       userMessages.length > 0
@@ -43,55 +43,45 @@ const ChatUserList = ({ chatusers, lastmessage, data, notifymsg, setIndmsg, init
     return bTime - aTime;
   });
 
-  //data user count etc share with contextapi for mobile notification
   useEffect(() => {
-
-    setNotific(enrichedUsers)
-
-  }, [lastmessage, chatusers])
+    setNotific(enrichedUsers);
+  }, [lastmessage, chatusers]);
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-1">
       {enrichedUsers.map(({ user, lastMsg, reaction, count }, index) => (
-        <li key={index} className="border-b border-gray-300 p-2">
+        <li key={user._id || index}>
           <div
-            className="flex hover:scale-[102%] hover:bg-slate-200 hover:rounded-md transition-all duration-300 p-2"
+            className="group flex items-center p-2.5 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-800/80 cursor-pointer transition-all duration-200"
             onClick={() => {
               if (!reaction || new Date(lastMsg?.createdAt) > new Date(reaction?.updatedAt)) {
-
-                notifymsg(lastMsg?._id, user, lastMsg?.chatId, data._id); //for lastmessage not reaction
-                initialLoad.current = true
+                notifymsg(lastMsg?._id, user, lastMsg?.chatId, data._id);
+                initialLoad.current = true;
               } else {
-                notifymsg(reaction?.messageId, user, lastMsg?.chatId, data._id);////for lastmessage reaction
+                notifymsg(reaction?.messageId, user, lastMsg?.chatId, data._id);
 
                 if (count) {
-                  initialLoad.current = false
-                  setSearchmsgid(reaction?.messageId)
+                  initialLoad.current = false;
+                  setSearchmsgid(reaction?.messageId);
                 } else {
-                  initialLoad.current = true
-
+                  initialLoad.current = true;
                 }
               }
               setIndmsg(1);
-
-
-
-
-
             }}
           >
             {/* Profile Picture */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               {user.profilepicture &&
-                !data.blockedbyUsers.some((duser) => duser.userId === user._id) ? (
+              !data.blockedbyUsers.some((duser) => duser.userId === user._id) ? (
                 <img
-                  className="w-14 h-12 rounded-full"
-                  src={`${backendbaseurl}/images/${user.profilepicture}`}
+                  className="w-11 h-11 rounded-full object-cover border border-slate-700/60"
+                  src={`${user.profilepicture}`}
                   alt="Profile"
                 />
               ) : (
                 <img
-                  className="w-14 h-12 border border-gray-300 rounded-full p-1"
+                  className="w-11 h-11 rounded-full object-cover border border-slate-700/60"
                   src={Userpic}
                   alt="Default Profile"
                 />
@@ -99,82 +89,83 @@ const ChatUserList = ({ chatusers, lastmessage, data, notifymsg, setIndmsg, init
               {!data.blockedUsers?.some((bdata) => bdata.userId === user._id) &&
                 !data.blockedbyUsers?.some((buser) => buser.userId === user._id) &&
                 user.status === 1 && (
-                  <span className="absolute text-[9px] top-0">
-                    <FaCircle className="text-green-400" />
+                  <span className="absolute bottom-0 right-0 p-0.5 bg-slate-950 rounded-full">
+                    <FaCircle className="text-emerald-500 text-[9px]" />
                   </span>
                 )}
             </div>
 
             {/* Chat Content */}
-            <div className="flex-col w-full ml-2">
-              <span className="font-sans font-normal text-sm">{user.name}</span>
-              <div className="flex justify-between">
-                {/* Last Message / Reaction */}
-                {!reaction || new Date(lastMsg?.createdAt) > new Date(reaction?.updatedAt) ? (
-                  <div className="flex text-gray-600">
-                    {lastMsg?.text
-                      ? lastMsg.text.length > 15
-                        ? `${lastMsg.text.substring(0, 15)}...`
-                        : lastMsg.text
-                      : mediaMsgicon(lastMsg?.media)}
-                  </div>
-                ) : (
-                  <div className="flex text-gray-600">
-                    {reaction?.user?._id === data?._id ? (
-                      <>
-                        {`you reacted ${reaction?.emoji} on `}
-                        {!reaction.text.includes(".") ? (
-                          reaction.text ? (
-                            reaction.text.length > 7
-                              ? `"${reaction.text.substring(0, 7)}..."`
-                              : `"${reaction.text}"`
-                          ) : reaction.text.includes(".webm") ? (
-                            <FaMicrophone />
-                          ) : (
-                            <FaFile />
-                          )
-                        ) : (
-                          mediaMsgicon([{ text: reaction.text }])
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {reaction?.user?.name
-                          ? `${reaction?.user?.name} reacted ${reaction?.emoji} on `
-                          : ""}
-                        {!reaction.text.includes(".") ? (
-                          reaction.text ? (
-                            reaction.text.length > 7
-                              ? `"${reaction.text.substring(0, 7)}..."`
-                              : `"${reaction.text}"`
-                          ) : reaction.text.includes(".webm") ? (
-                            <FaMicrophone />
-                          ) : (
-                            <FaFile />
-                          )
-                        ) : (
-                          mediaMsgicon([{ text: reaction.text }])
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Unread Messages Count */}
-
-                <div className={`flex mt-1 items-center justify-center w-5 h-5 p-2 text-[12px] text-white ${count ? 'bg-green-500' : ''} rounded-full`}>
-                  {count ? count : ''}
-                </div>
-
-
-                {/* Last Message Time */}
-                <span className="text-[10px] text-gray-500">
+            <div className="flex flex-col flex-1 min-w-0 ml-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-xs text-slate-200 group-hover:text-indigo-400 transition-colors truncate">
+                  {user.name}
+                </span>
+                
+                {/* Time */}
+                <span className="text-[10px] text-slate-500 font-medium ml-2 flex-shrink-0">
                   {reaction && new Date(lastMsg?.createdAt) < new Date(reaction?.updatedAt)
                     ? format(reaction?.updatedAt)
                     : lastMsg?.createdAt
-                      ? format(lastMsg?.createdAt)
-                      : ""}
+                    ? format(lastMsg?.createdAt)
+                    : ""}
                 </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                {/* Message preview */}
+                <div className="text-xs text-slate-400 truncate pr-2">
+                  {!reaction || new Date(lastMsg?.createdAt) > new Date(reaction?.updatedAt) ? (
+                    <div className="flex items-center space-x-1">
+                      {lastMsg?.text
+                        ? lastMsg.text
+                        : mediaMsgicon(lastMsg?.media)}
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1">
+                      {reaction?.user?._id === data?._id ? (
+                        <>
+                          <span className="text-slate-500">{`You reacted ${reaction?.emoji} on `}</span>
+                          {!reaction.text.includes(".") ? (
+                            reaction.text ? (
+                              <span>{`"${reaction.text}"`}</span>
+                            ) : reaction.text.includes(".webm") ? (
+                              <FaMicrophone className="inline text-slate-400 text-xs" />
+                            ) : (
+                              <FaFile className="inline text-slate-400 text-xs" />
+                            )
+                          ) : (
+                            mediaMsgicon([{ text: reaction.text }])
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-slate-500">
+                            {reaction?.user?.name ? `${reaction?.user?.name} reacted ${reaction?.emoji} on ` : ""}
+                          </span>
+                          {!reaction.text.includes(".") ? (
+                            reaction.text ? (
+                              <span>{`"${reaction.text}"`}</span>
+                            ) : reaction.text.includes(".webm") ? (
+                              <FaMicrophone className="inline text-slate-400 text-xs" />
+                            ) : (
+                              <FaFile className="inline text-slate-400 text-xs" />
+                            )
+                          ) : (
+                            mediaMsgicon([{ text: reaction.text }])
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Unread Counter Badge */}
+                {Boolean(count) && (
+                  <span className="flex items-center justify-center h-4 min-w-[16px] px-1 bg-indigo-600 text-white font-bold text-[10px] rounded-full flex-shrink-0 shadow-sm">
+                    {count}
+                  </span>
+                )}
               </div>
             </div>
           </div>

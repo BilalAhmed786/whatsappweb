@@ -55,18 +55,23 @@ router.post('/profilepic', userAuthorize, upload.single('image'), async (req, re
       return res.status(400).send('No file uploaded.');
     }
 
-
     if (req.userId !== req.body.userid) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    // Cloudinary stores the complete CDN URL in req.file.path
+    const imageUrl = req.file.path;
+
     const user = await User.findByIdAndUpdate(
       req.body.userid,
-      { $set: { profilepicture: req.file.filename } },
+      { $set: { profilepicture: imageUrl } },
       { new: true }
     );
 
-    res.json({ message: 'Image uploaded successfully!' });
+    res.json({ 
+      message: 'Image uploaded successfully!', 
+      profilepicture: user.profilepicture 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

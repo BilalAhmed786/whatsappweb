@@ -9,7 +9,7 @@ const replyindividualmedia = ({ filename }) => {
   const audioExtensions = ['mp3', 'wav', 'ogg'];
 
   if (imageExtensions.includes(fileType)) {
-    return <img src={`${backendbaseurl}/images/${filename}`} alt="Image" className="max-w-full max-h-40" />;
+    return <img src={`${filename}`} alt="Image" className="max-w-full max-h-40" />;
   }
 
   if (videoExtensions.includes(fileType)) {
