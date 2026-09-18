@@ -6,7 +6,7 @@ const socketfun = (server) => {
 
   const io = new Server(server, {
     cors: {
-      origin: 'https://whatsappweb.bilal-ahmed4817.workers.dev',
+      origin: 'https://whatsappweb.fasst-sallar.workers.dev',
       methods: ['POST', 'GET', 'DELETE', 'PUT'],
       credentials: true
     },

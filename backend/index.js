@@ -21,7 +21,7 @@ app.use(express.urlencoded({ limit: "250mb", extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieparser());
 app.use(cors({
-    origin: "https://whatsappweb.bilal-ahmed4817.workers.dev", 
+    origin: "https://whatsappweb.fasst-sallar.workers.dev", 
     credentials: true
 }));
 
