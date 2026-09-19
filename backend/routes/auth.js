@@ -3,6 +3,8 @@ const User = require("../models/users");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const userAuthorize = require("../middleware/middleware");
+const sendEmail = require("../utils/sendEmail");
+const resetPasswordTemplate = require("../utils/resetPasswordTemplate");
 
 const router = express.Router();
 
@@ -105,6 +107,82 @@ router.post("/logout", (req, res) => {
     sameSite: "none",
   });
   res.status(200).json("Logged out successfully");
+});
+
+// POST /forgot-password
+router.post("/forgotpassword", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        msg: "If that email exists, a reset link has been sent.",
+      });
+    }
+
+    const secret = process.env.SK + user.password;
+    const token = jwt.sign({ id: user._id }, secret, { expiresIn: "5m" });
+
+    const resetUrl = `${process.env.FRONTEND_BASE_URL}/resetpassword/${user._id}/${token}`;
+
+  const htmlContent = resetPasswordTemplate(resetUrl);
+
+    await sendEmail({
+      to: user.email,
+      subject: "Reset Your Password",
+      html: htmlContent,
+    });
+
+    return res.json({
+      msg: "If that email exists, a reset link has been sent.",
+    });
+  } catch (error) {
+    return res.status(500).json(["Error sending reset email"]);
+  }
+});
+
+router.post("/resetpassword/:id/:token", async (req, res) => {
+  const { password, retypepassword } = req.body;
+  const { id, token } = req.params;
+
+  const validation = [];
+
+  if (!password || !retypepassword) {
+    validation.push("All fields are required");
+  }
+
+  if (password !== retypepassword) {
+    validation.push("Passwords do not match");
+  }
+
+  if (validation.length > 0) {
+    return res.status(400).json(validation);
+  }
+
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(400).json(["Invalid or expired reset token"]);
+    }
+
+    // Verify token using secret derived from current user password
+    const secret = process.env.SK + user.password;
+    jwt.verify(token, secret);
+
+    // Set new password (ensure pre-save hook handles hashing if using bcrypt)
+    user.password = password;
+    user.retypepassword = retypepassword; // Only if your schema requires it
+
+    await user.save();
+
+    return res.json({ msg: "Password reset successful. You can now log in." });
+  } catch (error) {
+    // If token is expired, tampered with, or used after password was already changed
+    return res.status(400).json(["Invalid or expired reset token"]);
+  }
 });
 
 router.get("/userinfo", userAuthorize, async (req, res) => {
